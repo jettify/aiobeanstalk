@@ -1,5 +1,7 @@
 from functools import wraps
-from aiobeanstalk.helpers import check_error, check_name, int_it, load_yaml
+from aiobeanstalk.exceptions import UnexpectedResponse, BSJobTooBig
+from aiobeanstalk.helpers import check_error, check_name, int_it, yaml_parser, \
+    MAX_JOB_SIZE
 
 
 class Response(object):
@@ -50,26 +52,24 @@ class Handler(object):
         self.lookup = dict((r.word, r) for r in responses)
         self.eol = '\r\n'
 
-    def handler(self, resp):
+    def _handler(self, resp):
 
         response, sep, data = resp.partition(self.eol)
-        check_error(response)
-
         response = response.split(' ')
         word = response.pop(0)
-
+        check_error(word)
         resp = self.lookup.get(word, None)
 
-        # sanity checks
         if not resp:
-            errstr = "Response was: {0} {1}".format(word, ' '.join(response))
+            error_str = "Response was: {0} {1}".format(word, ' '.join(response))
         elif len(response) != len(resp.args):
-            errstr = "Response {} had wrong # args, got {} (expected {})"
-            # errstr %= (word, response, args)
+            error_str = "Response {} had wrong # args, got {} (expected {})"
         else: # all good
-            errstr = ''
+            error_str = ''
 
-        # if errstr: raise errors.UnexpectedResponse(errstr)
+        if error_str:
+            raise UnexpectedResponse(error_str)
+
         reply = dict(zip(resp.args, map(int_it, response)))
         reply['state'] = str(resp)
         if not resp.has_data:
@@ -79,7 +79,7 @@ class Handler(object):
         return reply
 
     def __call__(self, *args, **kwargs):
-        return self.handler(*args, **kwargs)
+        return self._handler(*args, **kwargs)
 
 
 def _interaction(*responses):
@@ -88,17 +88,20 @@ def _interaction(*responses):
 
     The decorator replaces the wrapped function, and returns the result of
     the original function, as well as a response handler set up to use the
-    expected responses."""
+    expected responses. Copied from [0]
+
+    [0] https://github.com/sophacles/pybeanstalk/blob/master/beanstalk/protohandler.py#L202
+    """
     def deco(func):
         @wraps(func)
-        def newfunc(*args, **kw):
+        def new_func(*args, **kw):
             line = func(*args, **kw)
             return line, Handler(*responses)
-        return newfunc
+        return new_func
     return deco
 
 
-@_interaction(OK('OK', ['bytes'], True, load_yaml))
+@_interaction(OK('OK', ['bytes'], True, yaml_parser))
 def process_stats():
     # <data> (YAML struct)
     return 'stats\r\n'
@@ -108,11 +111,11 @@ def process_stats():
 def process_put(data, pri=1, delay=0, ttr=60):
     """ """
     data_len = len(data)
-    # if dlen >= MAX_JOB_SIZE:
-    #     raise errors.JobTooBig('Job size is {} (max allowed is {}' %\
-    #         (dlen, MAX_JOB_SIZE))
-    putline = 'put {pri} {delay} {ttr} {data_len}\r\n{data}\r\n'
-    return putline.format(**locals())
+    if data_len >= MAX_JOB_SIZE:
+        msg = 'Job size is {} (max allowed is {}'.format(data_len, MAX_JOB_SIZE)
+        raise BSJobTooBig(msg)
+    put_line = 'put {pri} {delay} {ttr} {data_len}\r\n{data}\r\n'
+    return put_line.format(**locals())
 
 
 @_interaction(OK('USING', ['tube']))
@@ -132,7 +135,7 @@ def process_reserve():
 def process_reserve_with_timeout(timeout=0):
     """ 
 
-    :rtype : object
+    :rtype timeout: ``int``
     """
     if int(timeout) < 0:
         raise AttributeError('timeout must be greater than 0')
@@ -211,26 +214,26 @@ def process_touch(jid):
     return 'touch {}\r\n'.format(jid)
 
 
-@_interaction(OK('OK', ['bytes'], True, load_yaml))
+@_interaction(OK('OK', ['bytes'], True, yaml_parser))
 def process_stats():
     """ """
     return 'stats\r\n'
 
 
-@_interaction(OK('OK', ['bytes'], True, load_yaml))
+@_interaction(OK('OK', ['bytes'], True, yaml_parser))
 def process_stats_job(jid):
     """ """
     return 'stats-job {}\r\n'.format(jid)
 
 
-@_interaction(OK('OK', ['bytes'], True, load_yaml))
+@_interaction(OK('OK', ['bytes'], True, yaml_parser))
 def process_stats_tube(tube):
     """ """
     check_name(tube)
     return 'stats-tube {}\r\n'.format(tube)
 
 
-@_interaction(OK('OK', ['bytes'], True, load_yaml))
+@_interaction(OK('OK', ['bytes'], True, yaml_parser))
 def process_list_tubes():
     """ """
     return 'list-tubes\r\n'
@@ -242,7 +245,7 @@ def process_list_tube_used():
     return 'list-tube-used\r\n'
 
 
-@_interaction(OK('OK', ['bytes'], True, load_yaml))
+@_interaction(OK('OK', ['bytes'], True, yaml_parser))
 def process_list_tubes_watched():
     """ """
     return 'list-tubes-watched\r\n'

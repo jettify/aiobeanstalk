@@ -5,7 +5,31 @@ https://github.com/kr/beanstalkd/blob/master/doc/protocol.txt
 """
 
 
-class BeanstalkException(Exception):
+class AioBeanstalkException(Exception):
+    pass
+
+
+class BadFormatException(AioBeanstalkException):
+    """Bad name format of tube. Names may contain letters (A-Z and
+    a-z), numerals (0-9), hyphen ("-"), plus ("+"), slash ("/"), semicolon (";"),
+    dot ("."), dollar-sign ("$"), underscore ("_"), and parentheses ("(" and ")"),
+    but they may not begin with a hyphen.
+    """
+
+
+class UnexpectedResponse(AioBeanstalkException):
+    """Beanstald returns unexpected result, and no one knows how to
+    deal with it"""
+
+
+class BadFormatJobTooBig(AioBeanstalkException):
+    """
+
+    """
+
+
+
+class BeanstalkException(AioBeanstalkException):
     """Base class for Beanstalk exception errors."""
     pass
 
@@ -42,12 +66,7 @@ class BSUnknownCommand(BeanstalkException):
     bs_error = 'UNKNOWN_COMMAND'
 
 
-class BadFormat(BeanstalkException):
-    """Bad name format of tube. Names may contain letters (A-Z and
-    a-z), numerals (0-9), hyphen ("-"), plus ("+"), slash ("/"), semicolon (";"),
-    dot ("."), dollar-sign ("$"), underscore ("_"), and parentheses ("(" and ")"),
-    but they may not begin with a hyphen.
-    """
+
 
 
 class BSTimedOut(BeanstalkException):
@@ -107,7 +126,7 @@ class BSNotIgnored(BeanstalkException):
     bs_error = 'NOT_IGNORED'
 
 
-_ERRORS = {
+_BS_ERRORS = {
     'TIMED_OUT': BSTimedOut,
     'NOT_FOUND': BSNotFount,
     'BAD_FORMAT': BSBadFormat,

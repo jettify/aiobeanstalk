@@ -1,7 +1,7 @@
 import io
 import re
 import yaml
-from aiobeanstalk.exceptions import _ERRORS, BadFormat
+from aiobeanstalk.exceptions import _BS_ERRORS, BadFormatException
 
 # default value on server
 MAX_JOB_SIZE = (2**16) - 1
@@ -15,10 +15,10 @@ def check_error(error_name):
     In the case that an error was returned by beanstalkd, an appropriate error
     will be raised"""
 
-    err = _ERRORS.get(error_name, None)
-    if not err:
+    exeption = _BS_ERRORS.get(error_name, None)
+    if not exeption:
         return
-    raise err
+    raise exeption
 
 
 _namematch = re.compile(r'^[a-zA-Z0-9+\(\);.$][a-zA-Z0-9+\(\);.$-]{0,199}$')
@@ -27,7 +27,7 @@ _namematch = re.compile(r'^[a-zA-Z0-9+\(\);.$][a-zA-Z0-9+\(\);.$-]{0,199}$')
 def check_name(name):
     """used to check the validity of a tube name"""
     if not _namematch.match(name):
-        raise BadFormat('Illegal name')
+        raise BadFormatException('Illegal name')
 
 
 def int_it(val):
@@ -37,6 +37,10 @@ def int_it(val):
         return val
 
 
-def load_yaml(yaml_string):
+def yaml_parser(yaml_string):
+    """
+    :param yaml_string:
+    :return:
+    """
     handler = io.StringIO(yaml_string)
     return yaml.load(handler)
