@@ -222,30 +222,76 @@ def process_stats():
 
 @_interaction(OK('OK', ['bytes'], True, yaml_parser))
 def process_stats_job(jid):
-    """ """
+    """The stats-job command gives statistical information about the specified
+    job if it exists. The response is one of:
+
+        "NOT_FOUND\r\n" if the job does not exist.
+        "OK <bytes>\r\n<data>\r\n"
+
+    <bytes> is the size of the following data section in bytes.
+    <data> is a sequence of bytes of length <bytes> from the previous line. It
+         is a YAML file with statistical information represented a dictionary.
+
+    :param jid: ``int`` job id.
+    """
     return 'stats-job {}\r\n'.format(jid)
 
 
 @_interaction(OK('OK', ['bytes'], True, yaml_parser))
 def process_stats_tube(tube):
-    """ """
+    """The stats-tube command gives statistical information about the
+    specified tube if it exists. The response is one of:
+
+        "NOT_FOUND\r\n" if the tube does not exist.
+        "OK <bytes>\r\n<data>\r\n"
+
+    <bytes> is the size of the following data section in bytes.
+    <data> is a sequence of bytes of length <bytes> from the previous line. It
+     is a YAML file with statistical information represented a dictionary.
+
+    :param tube: ``str`` is a name at most 200 bytes. Stats will be returned
+        for this tube.
+    """
     check_name(tube)
     return 'stats-tube {}\r\n'.format(tube)
 
 
 @_interaction(OK('OK', ['bytes'], True, yaml_parser))
 def process_list_tubes():
-    """ """
+    """The list-tubes-watched command returns a list tubes currently being
+    watched by the client. The response is:
+
+        OK <bytes>\r\n
+        <data>\r\n
+
+    <bytes> is the size of the following data section in bytes.
+    <data> is a sequence of bytes of length <bytes> from the previous line. It
+    is a YAML file containing watched tube names as a list of strings.
+    """
     return 'list-tubes\r\n'
 
 
 @_interaction(OK('USING', ['tube']))
 def process_list_tube_used():
-    """ """
+    """The list-tube-used command returns the tube currently being used by the
+    client. The response is:
+
+        USING <tube>\r\n
+
+    <tube> is the name of the tube being used.
+    """
     return 'list-tube-used\r\n'
 
 
 @_interaction(OK('OK', ['bytes'], True, yaml_parser))
 def process_list_tubes_watched():
-    """ """
+    """The list-tubes-watched command returns a list tubes currently
+    being watched by the client.
+
+        OK <bytes>\r\n
+        <data>\r\n
+    <bytes> is the size of the following data section in bytes.
+    <data> is a sequence of bytes of length <bytes> from the previous line. It
+       is a YAML file containing watched tube names as a list of strings.
+    """
     return 'list-tubes-watched\r\n'
