@@ -194,7 +194,7 @@ def build_tests(test_cls, handlers):
 
     [0] http://stackoverflow.com/questions/1193909/pythons-unittest-and-dynamic-creation-of-test-cases
     """
-    for test_case in  handlers:
+    for test_case in handlers:
         def ch(test_case):
             return lambda self: self.base_interaction(test_case)
         setattr(test_cls, "test_" + test_case[0][0], ch(test_case))

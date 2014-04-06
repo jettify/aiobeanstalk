@@ -1,26 +1,27 @@
-"""Tests for aiohttp/server.py"""
-
 import asyncio
 import unittest
 import unittest.mock
 from aiobeanstalk.protocol import BeanstalkProtocol
 
 
-
 @asyncio.coroutine
-def connect(loop, protocol=BeanstalkProtocol):
-    transport, protocol = yield from loop.create_connection(protocol, 'localhost', 11300)
+def _connect(loop, protocol=BeanstalkProtocol):
+    transport, protocol = yield from loop.create_connection(
+        protocol, 'localhost', 11300)
     return transport, protocol
 
 
 def beanstalk_test(function):
+    """Helper function base on redis_test from [0]
+    https://github.com/jonathanslenders/asyncio-redis/blob/master/tests.py#L53
+    """
     function = asyncio.coroutine(function)
 
     def wrapper(self):
         @asyncio.coroutine
         def c():
             # Create connection
-            transport, protocol = yield from connect(self.loop, self.protocol_class)
+            transport, protocol = yield from _connect(self.loop, self.protocol_class)
 
             yield from function(self, transport, protocol)
 
