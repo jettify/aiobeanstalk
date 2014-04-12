@@ -66,9 +66,6 @@ class BSUnknownCommand(BeanstalkException):
     bs_error = 'UNKNOWN_COMMAND'
 
 
-
-
-
 class BSTimedOut(BeanstalkException):
     """
     If a non-negative timeout was specified and the timeout exceeded before a job

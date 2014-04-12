@@ -1,5 +1,5 @@
 import asyncio
-from aiobeanstalk.protocol import BeanstalkProtocol
+from aiobeanstalk.bsclient import BeanstalkProtocol
 
 
 def main():

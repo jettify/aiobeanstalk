@@ -1,2 +1,1 @@
-__author__ = 'nick'
-from .protocol import connect
+from .bsclient import connect

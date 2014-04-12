@@ -173,16 +173,15 @@ command_meta_data = [
 class BeanstalkProtocolTests(unittest.TestCase):
 
     def base_interaction(self, test_case):
-
         call_info, command_line, response_info = test_case
         process_fun, process_args = call_info
 
         func = getattr(handlers, process_fun)
 
         for response, resultcomp in response_info:
-            line, handler = func(*process_args)
+            command, handler = func(*process_args)
             msg_line = "Wrong cmd line for handler: {}".format(process_fun)
-            self.assertEqual(line, command_line, msg_line)
+            self.assertEqual(command, command_line, msg_line)
             result = handler(response)
             msg_result = "Wrong cmd line for handler: {}".format(process_fun)
             self.assertEqual(result, resultcomp, msg_result)

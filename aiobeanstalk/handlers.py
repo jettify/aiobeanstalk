@@ -1,47 +1,44 @@
 from functools import wraps
 from aiobeanstalk.exceptions import UnexpectedResponse, BSJobTooBig
-from aiobeanstalk.helpers import check_error, check_name, int_it, yaml_parser, \
+from aiobeanstalk.helpers import check_name, int_it, yaml_parser, \
     MAX_JOB_SIZE
 
 
-class Response(object):
+class _Response(object):
     """This is a simple object for describing the expected response to a
-    command. It is intended to be subclassed, and the subclasses to be named
-    in such a way as to describe the response.  For example, I've used
-    OK for the expected normal response, and Buried for the cases where
-    a command can result in a burried job.
+    command.
 
-    Arguments/attributes:
-        word: the first word sent back from the server (eg OK)
-        args: the server replies with space separated positional arguments,
-              this describes the names of those argumens
-        has_data: boolean stating whether or not to expect a data stream after
-                 the response line
-        parsefunc: a function, used to transform the data. This will be called
-                   just prior to returning the dict, and its result will
-                   be under the key 'data'
+
+    :param word: ``str`` the first word sent back from the server (eg OK)
+    :param args: the server replies with space separated positional arguments,
+        this describes the names of those argumens
+    :param has_data: ``bool`` stating whether or not to expect a data stream after
+        the response line
+    :param parse_func: ``function``, used to transform the data. This will be called
+        just prior to returning the dict, and its result will
+        be under the key 'data'
     """
 
-    def __init__(self, word, args=None, has_data=False, parsefunc=None):
+    def __init__(self, word, args=None, has_data=False, parse_func=None):
         self.word = word
         self.args = args if args else []
         self.has_data = has_data
-        self.parsefunc = parsefunc or (lambda x: x)
+        self.parse_func = parse_func or (lambda x: x)
 
     def __str__(self):
         """will fail if attr name hasnt been set by subclass or program"""
         return self.__class__.__name__.lower()
 
 
-class OK(Response):
+class OK(_Response):
     pass
 
 
-class Buried(Response):
+class Buried(_Response):
     pass
 
 
-class TimeOut(Response):
+class TimeOut(_Response):
     pass
 
 
@@ -52,17 +49,18 @@ class Handler(object):
         self.lookup = dict((r.word, r) for r in responses)
         self.eol = '\r\n'
 
-    def _handler(self, resp):
+    def _handler(self, response_raw):
 
-        response, sep, data = resp.partition(self.eol)
+        response, sep, data = response_raw.partition(self.eol)
         response = response.split(' ')
-        word = response.pop(0)
-        check_error(word)
-        resp = self.lookup.get(word, None)
+        response_status = response.pop(0)
 
-        if not resp:
-            error_str = "Response was: {0} {1}".format(word, ' '.join(response))
-        elif len(response) != len(resp.args):
+
+        resp_parse_params = self.lookup.get(response_status, None)
+
+        if not resp_parse_params:
+            error_str = "Response was: {0} {1}".format(response_status, ' '.join(response))
+        elif len(response) != len(resp_parse_params.args):
             error_str = "Response {} had wrong # args, got {} (expected {})"
         else: # all good
             error_str = ''
@@ -70,12 +68,13 @@ class Handler(object):
         if error_str:
             raise UnexpectedResponse(error_str)
 
-        reply = dict(zip(resp.args, map(int_it, response)))
-        reply['state'] = str(resp)
-        if not resp.has_data:
+        reply = dict(zip(resp_parse_params.args, map(int_it, response)))
+        # reply['data'] = None
+        reply['state'] = str(resp_parse_params)
+        if not resp_parse_params.has_data:
             return reply
 
-        reply['data'] = resp.parsefunc(data.rstrip(self.eol))
+        reply['data'] = resp_parse_params.parse_func(data.rstrip(self.eol))
         return reply
 
     def __call__(self, *args, **kwargs):
@@ -92,13 +91,13 @@ def _interaction(*responses):
 
     [0] https://github.com/sophacles/pybeanstalk/blob/master/beanstalk/protohandler.py#L202
     """
-    def deco(func):
+    def decortor(func):
         @wraps(func)
         def new_func(*args, **kw):
-            line = func(*args, **kw)
-            return line, Handler(*responses)
+            command = func(*args, **kw)
+            return command, Handler(*responses)
         return new_func
-    return deco
+    return decortor
 
 
 @_interaction(OK('OK', ['bytes'], True, yaml_parser))
