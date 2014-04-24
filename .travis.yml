@@ -20,8 +20,3 @@ install:
 script:
   - pyflakes .
   - python runtests.py -v
-
-branches:
-    only:
-        - master
-        - dev
