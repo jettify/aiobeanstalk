@@ -4,8 +4,7 @@ from aiobeanstalk.exceptions import BadFormatException
 from aiobeanstalk.helpers import check_name, int_it
 
 
-class BeanstalkProtocolTests(unittest.TestCase):
-
+class HelpersTests(unittest.TestCase):
 
     def test_check_name_(self):
         # should not raise any exceptions

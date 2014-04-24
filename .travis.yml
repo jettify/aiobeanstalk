@@ -1,0 +1,27 @@
+language: python
+
+python:
+  - "3.3"
+env:
+    global:
+        - BEANSTALKD=./beanstalkd
+install:
+  - pip install -r requirements.txt
+  - pip install pyflakes
+
+    # Install most recent beanstalkd from source
+    - wget https://github.com/downloads/kr/beanstalkd/beanstalkd-1.9.tar.gz
+    - tar xf beanstalkd-1.9.tar.gz
+    - make -C beanstalkd-1.9/
+    - mv beanstalkd-1.9/beanstalkd .
+    # Install Python dependencies
+    - pip install -r .travis-requirements.txt --use-mirrors
+
+script:
+  - pyflakes .
+  - python runtests.py -v
+
+branches:
+    only:
+        - master
+        - dev
