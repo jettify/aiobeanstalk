@@ -8,7 +8,7 @@ install:
   - pip install pyflakes
 
   # Install most recent beanstalkd from source
-  - wget https://github.com/kr/beanstalkd/archive/v1.9.tar.
+  - wget https://github.com/kr/beanstalkd/archive/v1.9.tar.gz
   - tar xfv v1.9.tar.gz
   - make -C beanstalkd-1.9
   - mv beanstalkd-1.9/beanstalkd .
