@@ -1,5 +1,7 @@
 aiobeanstalk
 ============
+.. image:: https://travis-ci.org/jettify/aiobeanstalk.svg?branch=master
+   :target: https://travis-ci.org/jettify/aiobeanstalk
 
 **aiobeanstalk** is a library for accessing beanstalk_ message queue
 from the asyncio_ (PEP-3156/tulip) framework. Basicly code ported from awesome
