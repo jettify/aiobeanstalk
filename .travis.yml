@@ -6,6 +6,7 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install pyflakes
+  - pip install pyyaml
 
   # Install most recent beanstalkd from source
   - wget https://github.com/kr/beanstalkd/archive/v1.9.tar.gz
@@ -13,7 +14,6 @@ install:
   - make -C beanstalkd-1.9
   - mv beanstalkd-1.9/beanstalkd .
   # Install Python dependencies
-  - pip install -r .travis-requirements.txt --use-mirrors
   - beanstalkd -l 127.0.0.1 -p 11300 &
 
 
