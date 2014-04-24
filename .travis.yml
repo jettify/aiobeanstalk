@@ -14,7 +14,7 @@ install:
     - tar xf beanstalkd-1.9.tar.gz
     - make -C beanstalkd-1.9/
     - mv beanstalkd-1.9/beanstalkd .
-    # Install Python dependencies.
+    # Install Python dependencies
     - pip install -r .travis-requirements.txt --use-mirrors
 
 script:
